@@ -38,7 +38,7 @@ export function Perfil({ usuario, setUsuario, ordenes = [] }) {
   };
 
   return (
-    <section>
+    <section className="perfil-wrapper">
       <h2>Mi Perfil</h2>
 
       <form onSubmit={guardarPerfil}>
