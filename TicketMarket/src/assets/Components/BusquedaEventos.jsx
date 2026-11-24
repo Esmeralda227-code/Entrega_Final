@@ -1,12 +1,12 @@
 
-import { useState, useEffect } from 'react';
-import { useEventos } from '../Context/EventosContext.jsx';
+import { useState, useEffect } from "react";
+import { useEventos } from "../Context/EventosContext.jsx";
 
 function BusquedaEventos() {
   const { eventos } = useEventos();
 
-  const [busqueda, setBusqueda] = useState('');
-  const [categoria, setCategoria] = useState('Todo');
+  const [busqueda, setBusqueda] = useState("");
+  const [categoria, setCategoria] = useState("Todo");
   const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
   const [cargando, setCargando] = useState(true);
 
@@ -18,19 +18,33 @@ function BusquedaEventos() {
     return () => clearTimeout(temporizador);
   }, []);
 
-  const eventosFiltrados = eventos.filter((evento) => {
-    const coincideNombre = (evento.titulo || '')
+  const normalizarTexto = (texto = "") =>
+    texto
       .toLowerCase()
-      .includes(busqueda.toLowerCase());
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
+  const eventosFiltrados = eventos.filter((evento) => {
+    const coincideNombre = normalizarTexto(evento.titulo || "")
+      .includes(normalizarTexto(busqueda));
 
     const coincideCategoria =
-      categoria === 'Todo' || evento.categoria === categoria;
+      categoria === "Todo" ||
+      normalizarTexto(evento.categoria || "") ===
+        normalizarTexto(categoria);
 
-    return coincideNombre && coincideCategoria;
+    const disponible =
+      !evento.estado || evento.estado === "Disponible";
+
+    return coincideNombre && coincideCategoria && disponible;
   });
 
   if (cargando) {
-    return <p>Cargando eventos...</p>;
+    return (
+      <p className="cargando-eventos">
+        Cargando eventos...
+      </p>
+    );
   }
 
   return (
@@ -64,7 +78,7 @@ function BusquedaEventos() {
           {eventoSeleccionado.imagen ? (
             <img
               src={eventoSeleccionado.imagen}
-              alt={eventoSeleccionado.titulo || 'Imagen del evento'}
+              alt={eventoSeleccionado.titulo || "Imagen del evento"}
               className="imagen-detalle"
             />
           ) : (
@@ -73,22 +87,22 @@ function BusquedaEventos() {
             </div>
           )}
 
-          <h2>{eventoSeleccionado.titulo || 'Sin título'}</h2>
-          <p>{eventoSeleccionado.descripcion || 'Sin descripción'}</p>
-          <p>Fecha: {eventoSeleccionado.fecha || 'No especificada'}</p>
-          <p>Hora: {eventoSeleccionado.hora || 'No especificada'}</p>
-          <p>Lugar: {eventoSeleccionado.lugar || 'No especificado'}</p>
-          <p>Categoría: {eventoSeleccionado.categoria || 'Sin categoría'}</p>
-          <p>Estado: {eventoSeleccionado.estado || 'No especificado'}</p>
+          <h2>{eventoSeleccionado.titulo || "Sin título"}</h2>
+          <p>{eventoSeleccionado.descripcion || "Sin descripción"}</p>
+          <p>Fecha: {eventoSeleccionado.fecha || "No especificada"}</p>
+          <p>Hora: {eventoSeleccionado.hora || "No especificada"}</p>
+          <p>Lugar: {eventoSeleccionado.lugar || "No especificado"}</p>
+          <p>Categoría: {eventoSeleccionado.categoria || "Sin categoría"}</p>
+          <p>Estado: {eventoSeleccionado.estado || "No especificado"}</p>
 
           <h3>Zonas y precios</h3>
 
           {eventoSeleccionado.zonas?.length > 0 ? (
             eventoSeleccionado.zonas.map((zona, indice) => (
               <p key={zona.id ?? indice}>
-                {zona.nombre || 'Zona'} - $
+                {zona.nombre || "Zona"} - $
                 {Number(zona.precio || 0).toFixed(2)}
-                {' '}Disponibles: {zona.disponibles ?? 0}
+                {" "}Disponibles: {zona.disponibles ?? 0}
               </p>
             ))
           ) : (
@@ -103,7 +117,7 @@ function BusquedaEventos() {
         <>
           <div className="catalogo-titulo">
             <h3>
-              {categoria === 'Todo' ? 'Todos los eventos' : categoria}
+              {categoria === "Todo" ? "Todos los eventos" : categoria}
             </h3>
             <p>{eventosFiltrados.length} eventos encontrados</p>
           </div>
@@ -115,7 +129,7 @@ function BusquedaEventos() {
                   {evento.imagen ? (
                     <img
                       src={evento.imagen}
-                      alt={evento.titulo || 'Imagen del evento'}
+                      alt={evento.titulo || "Imagen del evento"}
                       className="imagen-evento"
                     />
                   ) : (

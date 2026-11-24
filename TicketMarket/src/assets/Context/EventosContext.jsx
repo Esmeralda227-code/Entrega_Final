@@ -1,4 +1,3 @@
-
 import {
   createContext,
   useContext,
@@ -8,7 +7,7 @@ import {
 
 import { eventos as eventosIniciales } from '../Data/eventos.js';
 
-const EventosContext = createContext();
+const EventosContext = createContext(null);
 
 function eventosReducer(state, action) {
   switch (action.type) {
@@ -17,14 +16,14 @@ function eventosReducer(state, action) {
 
     case 'ACTUALIZAR_EVENTO':
       return state.map((evento) =>
-        evento.id === action.payload.id
+        String(evento.id) === String(action.payload.id)
           ? action.payload
           : evento
       );
 
     case 'ELIMINAR_EVENTO':
       return state.filter(
-        (evento) => evento.id !== action.payload
+        (evento) => String(evento.id) !== String(action.payload)
       );
 
     default:
@@ -33,41 +32,23 @@ function eventosReducer(state, action) {
 }
 
 function obtenerEventosIniciales() {
-  const guardados = localStorage.getItem('eventos');
+  try {
+    const guardados = localStorage.getItem('eventos');
 
-  if (!guardados) {
-    return eventosIniciales;
-  }
-
-  const eventosGuardados = JSON.parse(guardados);
-
-  const eventosActualizados = eventosIniciales.map((inicial) => {
-    const guardado = eventosGuardados.find(
-      (evento) => evento.id === inicial.id
-    );
-
-    if (!guardado) {
-      return inicial;
+    if (!guardados) {
+      return eventosIniciales;
     }
 
-    return {
-      ...inicial,
-      ...guardado,
-      titulo: inicial.titulo,
-      descripcion: inicial.descripcion,
-      categoria: inicial.categoria,
-      imagen: inicial.imagen
-    };
-  });
+    const eventosGuardados = JSON.parse(guardados);
 
-  const eventosAdicionales = eventosGuardados.filter(
-    (evento) =>
-      !eventosIniciales.some(
-        (inicial) => inicial.id === evento.id
-      )
-  );
+    if (!Array.isArray(eventosGuardados)) {
+      return eventosIniciales;
+    }
 
-  return [...eventosActualizados, ...eventosAdicionales];
+    return eventosGuardados;
+  } catch {
+    return eventosIniciales;
+  }
 }
 
 export function EventosProvider({ children }) {
@@ -89,5 +70,13 @@ export function EventosProvider({ children }) {
 }
 
 export function useEventos() {
-  return useContext(EventosContext);
+  const contexto = useContext(EventosContext);
+
+  if (!contexto) {
+    throw new Error(
+      'useEventos debe utilizarse dentro de EventosProvider'
+    );
+  }
+
+  return contexto;
 }

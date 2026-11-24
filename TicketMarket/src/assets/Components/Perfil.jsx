@@ -5,6 +5,7 @@ import { QRCodeCanvas } from "qrcode.react";
 export function Perfil({
   usuario,
   setUsuario,
+  setSesion,
   ordenes = [],
   onCerrarSesion
 }) {
@@ -22,71 +23,99 @@ export function Perfil({
 
   const guardarPerfil = (e) => {
     e.preventDefault();
+
     setError("");
     setMensaje("");
 
-    if (!nombre.trim() || !correo.includes("@")) {
-      setError("Ingresa un nombre y un correo activo.");
+    const nombreLimpio = nombre.trim();
+    const correoLimpio = correo.trim().toLowerCase();
+
+    if (
+      !nombreLimpio ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoLimpio)
+    ) {
+      setError("Ingresa un nombre y un correo válido.");
       return;
     }
 
     const nuevoUsuario = {
       ...usuario,
-      nombre: nombre.trim(),
-      correo: correo.trim().toLowerCase(),
+      nombre: nombreLimpio,
+      correo: correoLimpio
     };
 
-    setUsuario(nuevoUsuario);
+    try {
+      const sesionActual = JSON.parse(
+        localStorage.getItem("sesion") || "null"
+      );
 
-    localStorage.setItem(
-      "usuario_tiket",
-      JSON.stringify(nuevoUsuario)
-    );
+      const nuevaSesion = sesionActual
+        ? {
+            ...sesionActual,
+            nombre: nombreLimpio,
+            correo: correoLimpio
+          }
+        : null;
 
-    const sesionActual = JSON.parse(
-      localStorage.getItem("sesion") || "null"
-    );
+      const registrados = JSON.parse(
+        localStorage.getItem("usuariosRegistrados") || "[]"
+      );
 
-    if (sesionActual) {
-      const nuevaSesion = {
-        ...sesionActual,
-        nombre: nuevoUsuario.nombre,
-        correo: nuevoUsuario.correo,
-      };
+      const usuariosActualizados = Array.isArray(registrados)
+        ? registrados.map((u) =>
+            String(u.id) === String(nuevoUsuario.id)
+              ? {
+                  ...u,
+                  nombre: nombreLimpio,
+                  correo: correoLimpio
+                }
+              : u
+          )
+        : [];
 
       localStorage.setItem(
-        "sesion",
-        JSON.stringify(nuevaSesion)
+        "usuario_tiket",
+        JSON.stringify(nuevoUsuario)
       );
-    }
 
-    const registrados = JSON.parse(
-      localStorage.getItem("usuariosRegistrados") || "[]"
-    );
+      if (nuevaSesion) {
+        localStorage.setItem(
+          "sesion",
+          JSON.stringify(nuevaSesion)
+        );
 
-    const usuariosActualizados = registrados.map((u) =>
-      String(u.id) === String(nuevoUsuario.id)
-        ? {
-          ...u,
-          nombre: nuevoUsuario.nombre,
-          correo: nuevoUsuario.correo,
-        }
-        : u
-    );
+        setSesion?.(nuevaSesion);
+      }
 
-    localStorage.setItem(
-      "usuariosRegistrados",
-      JSON.stringify(usuariosActualizados)
-    );
+      localStorage.setItem(
+        "usuariosRegistrados",
+        JSON.stringify(usuariosActualizados)
+      );
 
-    setMensaje("Perfil guardado.");
-  };
+      setUsuario(nuevoUsuario);
+      setMensaje("Perfil guardado correctamente.");
 
-  const cerrarSesion = () => {
-    if (onCerrarSesion) {
-      onCerrarSesion();
+    } catch (error) {
+      console.error("Error al guardar el perfil:", error);
+      setError("No se pudieron guardar los cambios.");
     }
   };
+
+  const ordenesUsuario = ordenes.filter((orden) => {
+    if (
+      orden.usuarioId !== undefined &&
+      orden.usuarioId !== null
+    ) {
+      return String(orden.usuarioId) === String(usuario?.id);
+    }
+
+    // Compatibilidad con compras anteriores
+    // que todavía no tienen usuarioId.
+    return (
+      orden.correo?.toLowerCase() ===
+      usuario?.correo?.toLowerCase()
+    );
+  });
 
   return (
     <section className="perfil-wrapper">
@@ -95,6 +124,7 @@ export function Perfil({
       <form onSubmit={guardarPerfil}>
         <div>
           <label htmlFor="perfil-nombre">Nombre</label>
+
           <input
             id="perfil-nombre"
             type="text"
@@ -105,6 +135,7 @@ export function Perfil({
 
         <div>
           <label htmlFor="perfil-correo">Correo</label>
+
           <input
             id="perfil-correo"
             type="email"
@@ -113,13 +144,23 @@ export function Perfil({
           />
         </div>
 
-        {error && <p>{error}</p>}
-        {mensaje && <p>{mensaje}</p>}
+        {error && (
+          <p role="alert">{error}</p>
+        )}
 
-        <button type="submit">Guardar perfil</button>
+        {mensaje && (
+          <p role="status">{mensaje}</p>
+        )}
+
+        <button type="submit">
+          Guardar perfil
+        </button>
 
         {usuario && (
-          <button type="button" onClick={cerrarSesion}>
+          <button
+            type="button"
+            onClick={onCerrarSesion}
+          >
             Cerrar sesión
           </button>
         )}
@@ -129,29 +170,31 @@ export function Perfil({
 
       <h3>Historial de compras</h3>
 
-      {ordenes.length === 0 ? (
+      {ordenesUsuario.length === 0 ? (
         <p>No tienes compras registradas todavía.</p>
       ) : (
         <ul>
-          {ordenes.map((orden) => (
+          {ordenesUsuario.map((orden) => (
             <li key={orden.id}>
               <p>
-                <strong>Orden:</strong> {orden.id} |{" "}
+                <strong>Orden:</strong> {orden.id}
+                {" | "}
                 <strong>Fecha:</strong> {orden.fechaCompra}
               </p>
 
               <p>
-                <strong>Titular:</strong> {orden.titular} |{" "}
+                <strong>Titular:</strong> {orden.titular}
+                {" | "}
                 <strong>Tarjeta:</strong> ** {orden.terminacion}
               </p>
 
               <p>
                 <strong>Total:</strong> $
-                {Number(orden.total).toFixed(2)}
+                {Number(orden.total || 0).toFixed(2)}
               </p>
 
               <ul>
-                {orden.boletos.map((boleto, index) => (
+                {(orden.boletos || []).map((boleto, index) => (
                   <li key={boleto.id || index}>
                     <p>
                       {boleto.evento || boleto.nombre || "Boleto"}
@@ -171,7 +214,7 @@ export function Perfil({
                             <h4>Boleto electrónico</h4>
 
                             <QRCodeCanvas
-                              value={entrada.valorQR}
+                              value={entrada.valorQR || entrada.codigo}
                               size={180}
                               level="H"
                             />
@@ -185,8 +228,8 @@ export function Perfil({
                       </div>
                     ) : (
                       <p>
-                        Este boleto pertenece a una compra
-                        anterior y no tiene QR generado.
+                        Este boleto pertenece a una compra anterior
+                        y no tiene QR generado.
                       </p>
                     )}
                   </li>
