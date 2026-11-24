@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 
 const EVENTOS = [
@@ -21,7 +22,6 @@ const EVENTOS = [
             { nombre: "General", precio: 90 },
             { nombre: "VIP", precio: 160 },
             { nombre: "Estudiante", precio: 60 }
-
         ]
     },
     {
@@ -33,7 +33,6 @@ const EVENTOS = [
             { nombre: "General", precio: 45 },
             { nombre: "VIP", precio: 75 },
             { nombre: "Estudiante", precio: 25 }
-
         ]
     },
     {
@@ -45,7 +44,6 @@ const EVENTOS = [
             { nombre: "General", precio: 45 },
             { nombre: "VIP", precio: 80 },
             { nombre: "Estudiante", precio: 30 }
-
         ]
     },
 ];
@@ -72,15 +70,11 @@ export function FechasBoletos({ items = [], setItems, onIrACarrito }) {
 
     const cambiarCantidad = (evtId, cantidad) => {
         const val = Math.max(1, Number(cantidad) || 1);
-        const eventoObj = EVENTOS.find((e) => e.id === evtId);
-        const zonaPorDefecto = eventoObj?.zonas?.[0]?.nombre || "";
 
         setSeleccion((prev) => ({
             ...prev,
             [evtId]: {
-                zona: zonaPorDefecto,
-                cantidad: 1,
-                ...prev[evtId],
+                ...(prev[evtId] || { zona: EVENTOS.find(e => e.id === evtId).zonas[0].nombre }),
                 cantidad: val,
             },
         }));
@@ -121,8 +115,9 @@ export function FechasBoletos({ items = [], setItems, onIrACarrito }) {
     };
 
     return (
-        <section>
+        <section className="fechas-wrapper">
             <h2>Fechas y boletos</h2>
+
             {aviso && <p>{aviso}</p>}
 
             {EVENTOS.map((evt) => {
@@ -133,6 +128,7 @@ export function FechasBoletos({ items = [], setItems, onIrACarrito }) {
                 return (
                     <article key={evt.id}>
                         <h3>{evt.evento}</h3>
+
                         <p>
                             Fecha: {evt.fecha} | Lugar: {evt.lugar}
                         </p>
