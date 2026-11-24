@@ -1,60 +1,78 @@
 
-import { useState, useEffect } from 'react';
-import './App.css';
+import { useEffect, useState } from "react";
+import "./App.css";
 
-import Login from './assets/Components/Login.jsx';
-import BusquedaEventos from './assets/Components/BusquedaEventos.jsx';
-import AdministracionEventos from './assets/Components/AdministracionEventos.jsx';
-import Reportes from './assets/Components/Reportes.jsx';
-import { FechasBoletos } from './assets/Components/FechasBoletos.jsx';
-import { Perfil } from './assets/Components/Perfil.jsx';
-import { Pagos } from './assets/Components/Pagos.jsx';
-import { Carrito } from './assets/Components/Carrito.jsx';
+import Login from "./assets/Components/Login.jsx";
+import BusquedaEventos from "./assets/Components/BusquedaEventos.jsx";
+import AdministracionEventos from "./assets/Components/AdministracionEventos.jsx";
+import Reportes from "./assets/Components/Reportes.jsx";
+import { FechasBoletos } from "./assets/Components/FechasBoletos.jsx";
+import { Perfil } from "./assets/Components/Perfil.jsx";
+import Carrito from "./assets/Components/Carrito.jsx";
+import Pagos from "./assets/Components/Pagos.jsx";
 
-import { EventosProvider } from './assets/Context/EventosContext.jsx';
+const obtenerSesion = () => {
+  try {
+    const guardada = localStorage.getItem("sesion");
+    return guardada ? JSON.parse(guardada) : null;
+  } catch {
+    return null;
+  }
+};
 
-import logo from './assets/Imagenes/Logo.png';
+const obtenerCarrito = (id) => {
+  if (!id) return [];
+
+  try {
+    return JSON.parse(
+      localStorage.getItem(`carrito_tiket_${id}`)
+    ) || [];
+  } catch {
+    return [];
+  }
+};
 
 function App() {
-  const [sesion, setSesion] = useState(() => {
-    const guardada = localStorage.getItem('sesion');
-    return guardada ? JSON.parse(guardada) : null;
-  });
+  const [sesion, setSesion] = useState(obtenerSesion);
 
-  const [vista, setVista] = useState('inicio');
-
-  const [items, setItems] = useState(() => {
-    const guardada = localStorage.getItem('sesion');
-
-    if (!guardada) return [];
-
-    const usuarioActual = JSON.parse(guardada);
-    const carritoGuardado = localStorage.getItem(
-      `carrito_tiket_${usuarioActual.id}`
-    );
-
-    return carritoGuardado ? JSON.parse(carritoGuardado) : [];
-  });
+  const [items, setItems] = useState(() =>
+    obtenerCarrito(
+      obtenerSesion()?.rol === "admin"
+        ? null
+        : obtenerSesion()?.id
+    )
+  );
 
   const [cartOwnerId, setCartOwnerId] = useState(() => {
-    const guardada = localStorage.getItem('sesion');
-    if (!guardada) return null;
+    const usuarioActual = obtenerSesion();
 
-    const usuarioActual = JSON.parse(guardada);
-    return usuarioActual.rol === 'admin' ? null : usuarioActual.id;
-  });
+    if (!usuarioActual || usuarioActual.rol === "admin") {
+      return null;
+    }
 
-  const [ordenes, setOrdenes] = useState(() => {
-    const guardado = localStorage.getItem('ordenes_tiket');
-    return guardado ? JSON.parse(guardado) : [];
+    return String(usuarioActual.id);
   });
 
   const [usuario, setUsuario] = useState(() => {
-    const guardado = localStorage.getItem('usuario_tiket');
-    return guardado ? JSON.parse(guardado) : { nombre: '', correo: '' };
+    try {
+      return JSON.parse(localStorage.getItem("usuario_tiket")) || null;
+    } catch {
+      return null;
+    }
   });
 
-  // Guardar únicamente el carrito del usuario dueño del estado actual.
+  const [ordenes, setOrdenes] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("ordenes_tiket")) || [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [vista, setVista] = useState(() =>
+    obtenerSesion() ? "inicio" : "login"
+  );
+
   useEffect(() => {
     if (cartOwnerId !== null) {
       localStorage.setItem(
@@ -64,148 +82,142 @@ function App() {
     }
   }, [items, cartOwnerId]);
 
-  const agregarOrden = (nuevaOrden) => {
-    setOrdenes((prev) => {
-      const actualizadas = [nuevaOrden, ...prev];
-      localStorage.setItem('ordenes_tiket', JSON.stringify(actualizadas));
-      return actualizadas;
-    });
-  };
+  useEffect(() => {
+    localStorage.setItem("ordenes_tiket", JSON.stringify(ordenes));
+  }, [ordenes]);
 
   const iniciarSesion = (nuevaSesion) => {
-    const carritoGuardado =
-      nuevaSesion.rol === 'admin'
-        ? null
-        : localStorage.getItem(`carrito_tiket_${nuevaSesion.id}`);
+    const idUsuario = String(nuevaSesion.id);
 
-    const carritoUsuario = carritoGuardado
-      ? JSON.parse(carritoGuardado)
-      : [];
+    const nuevoPropietario =
+      nuevaSesion.rol === "admin" ? null : idUsuario;
+
+    const carritoUsuario = obtenerCarrito(nuevoPropietario);
 
     setItems(carritoUsuario);
-    setCartOwnerId(nuevaSesion.rol === 'admin' ? null : nuevaSesion.id);
+    setCartOwnerId(nuevoPropietario);
     setSesion(nuevaSesion);
+    setUsuario(nuevaSesion);
 
-    const nuevoUsuario = {
-      nombre: nuevaSesion.nombre,
-      correo: nuevaSesion.correo
-    };
+    localStorage.setItem("sesion", JSON.stringify(nuevaSesion));
+    localStorage.setItem("usuario_tiket", JSON.stringify(nuevaSesion));
 
-    setUsuario(nuevoUsuario);
-
-    localStorage.setItem('sesion', JSON.stringify(nuevaSesion));
-    localStorage.setItem('usuario_tiket', JSON.stringify(nuevoUsuario));
-
-    setVista('inicio');
+    setVista("inicio");
   };
 
   const cerrarSesion = () => {
-    localStorage.removeItem('sesion');
-    localStorage.removeItem('usuario_tiket');
-
-    setSesion(null);
-    setUsuario({ nombre: '', correo: '' });
     setItems([]);
     setCartOwnerId(null);
-    setVista('inicio');
+    setSesion(null);
+    setUsuario(null);
+    setVista("login");
+
+    localStorage.removeItem("sesion");
+    localStorage.removeItem("usuario_tiket");
+  };
+
+  const actualizarOrdenes = (nuevaOrden) => {
+    setOrdenes((actuales) => [...actuales, nuevaOrden]);
   };
 
   return (
-    <EventosProvider>
+    <div className="app">
       {!sesion ? (
         <Login onLogin={iniciarSesion} />
       ) : (
-        <div className="app">
+        <>
           <header className="encabezado">
-            <img
-              src={logo}
-              alt="Logo de TicketMarket"
-              className="logo"
-            />
             <h1>TicketMarket</h1>
 
-            {sesion.rol !== 'admin' && (
-              <nav>
-                <button type="button" onClick={() => setVista('inicio')}>
-                  Eventos
-                </button>
+            <nav>
+              <button onClick={() => setVista("inicio")}>
+                Inicio
+              </button>
 
-                <button type="button" onClick={() => setVista('fechas')}>
-                  Fechas y boletos
-                </button>
+              {sesion.rol === "admin" ? (
+                <>
+                  <button onClick={() => setVista("administracion")}>
+                    Administración
+                  </button>
 
-                <button type="button" onClick={() => setVista('carrito')}>
-                  Mi carrito ({items.length})
-                </button>
+                  <button onClick={() => setVista("reportes")}>
+                    Reportes
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => setVista("fechas")}>
+                    Boletos
+                  </button>
 
-                <button type="button" onClick={() => setVista('pagos')}>
-                  Pagos
-                </button>
+                  <button onClick={() => setVista("carrito")}>
+                    Carrito ({items.length})
+                  </button>
 
-                <button type="button" onClick={() => setVista('perfil')}>
-                  Mi perfil
-                </button>
-              </nav>
-            )}
+                  <button onClick={() => setVista("perfil")}>
+                    Perfil
+                  </button>
+                </>
+              )}
+
+              <button onClick={cerrarSesion}>
+                Cerrar sesión
+              </button>
+            </nav>
           </header>
 
-          <div className="sesion-usuario">
-            <div>
-              <h2>Bienvenido, {sesion.nombre}</h2>
-              <p>Rol: {sesion.rol}</p>
-            </div>
+          <main>
+            {vista === "inicio" && (
+              <BusquedaEventos
+                usuario={sesion}
+                setVista={setVista}
+              />
+            )}
 
-            <button type="button" onClick={cerrarSesion}>
-              Cerrar sesión
-            </button>
-          </div>
-
-          {sesion.rol === 'admin' ? (
-            <>
+            {vista === "administracion" && sesion.rol === "admin" && (
               <AdministracionEventos />
-              <Reportes />
-            </>
-          ) : (
-            <main>
-              {vista === 'inicio' && <BusquedaEventos />}
+            )}
 
-              {vista === 'carrito' && (
-                <Carrito
-                  items={items}
-                  setItems={setItems}
-                  onIrAPagar={() => setVista('pagos')}
-                />
-              )}
+            {vista === "reportes" && sesion.rol === "admin" && (
+              <Reportes ordenes={ordenes} />
+            )}
 
-              {vista === 'pagos' && (
-                <Pagos
-                  items={items}
-                  setItems={setItems}
-                  onCompraExitosa={agregarOrden}
-                />
-              )}
+            {vista === "fechas" && sesion.rol !== "admin" && (
+              <FechasBoletos
+                items={items}
+                setItems={setItems}
+                onIrACarrito={() => setVista("carrito")}
+              />
+            )}
 
-              {vista === 'perfil' && (
-                <Perfil
-                  usuario={usuario}
-                  setUsuario={setUsuario}
-                  ordenes={ordenes}
-                  onCerrarSesion={cerrarSesion}
-                />
-              )}
+            {vista === "carrito" && sesion.rol !== "admin" && (
+              <Carrito
+                items={items}
+                setItems={setItems}
+                onIrAPagar={() => setVista("pagos")}
+              />
+            )}
 
-              {vista === 'fechas' && (
-                <FechasBoletos
-                  items={items}
-                  setItems={setItems}
-                  onIrACarrito={() => setVista('carrito')}
-                />
-              )}
-            </main>
-          )}
-        </div>
+            {vista === "pagos" && sesion.rol !== "admin" && (
+              <Pagos
+                items={items}
+                setItems={setItems}
+                onCompraExitosa={actualizarOrdenes}
+              />
+            )}
+
+            {vista === "perfil" && sesion.rol !== "admin" && (
+              <Perfil
+                usuario={usuario}
+                setUsuario={setUsuario}
+                ordenes={ordenes}
+                onCerrarSesion={cerrarSesion}
+              />
+            )}
+          </main>
+        </>
       )}
-    </EventosProvider>
+    </div>
   );
 }
 

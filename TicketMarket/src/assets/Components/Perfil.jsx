@@ -1,11 +1,24 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { QRCodeCanvas } from "qrcode.react";
 
-export function Perfil({ usuario, setUsuario, ordenes = [] }) {
+export function Perfil({
+  usuario,
+  setUsuario,
+  ordenes = [],
+  onCerrarSesion
+}) {
   const [nombre, setNombre] = useState(usuario?.nombre || "");
   const [correo, setCorreo] = useState(usuario?.correo || "");
   const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setNombre(usuario?.nombre || "");
+    setCorreo(usuario?.correo || "");
+    setMensaje("");
+    setError("");
+  }, [usuario]);
 
   const guardarPerfil = (e) => {
     e.preventDefault();
@@ -20,21 +33,59 @@ export function Perfil({ usuario, setUsuario, ordenes = [] }) {
     const nuevoUsuario = {
       ...usuario,
       nombre: nombre.trim(),
-      correo: correo.trim(),
+      correo: correo.trim().toLowerCase(),
     };
 
     setUsuario(nuevoUsuario);
-    localStorage.setItem("usuario_tiket", JSON.stringify(nuevoUsuario));
+
+    localStorage.setItem(
+      "usuario_tiket",
+      JSON.stringify(nuevoUsuario)
+    );
+
+    const sesionActual = JSON.parse(
+      localStorage.getItem("sesion") || "null"
+    );
+
+    if (sesionActual) {
+      const nuevaSesion = {
+        ...sesionActual,
+        nombre: nuevoUsuario.nombre,
+        correo: nuevoUsuario.correo,
+      };
+
+      localStorage.setItem(
+        "sesion",
+        JSON.stringify(nuevaSesion)
+      );
+    }
+
+    const registrados = JSON.parse(
+      localStorage.getItem("usuariosRegistrados") || "[]"
+    );
+
+    const usuariosActualizados = registrados.map((u) =>
+      String(u.id) === String(nuevoUsuario.id)
+        ? {
+          ...u,
+          nombre: nuevoUsuario.nombre,
+          correo: nuevoUsuario.correo,
+        }
+        : u
+    );
+
+    localStorage.setItem(
+      "usuariosRegistrados",
+      JSON.stringify(usuariosActualizados)
+    );
+
     setMensaje("Perfil guardado.");
   };
 
   const cerrarSesion = () => {
-    setUsuario(null);
-    setNombre("");
-    setCorreo("");
-    setMensaje("");
-    setError("");
-    localStorage.removeItem("usuario_tiket");
+    if (onCerrarSesion) {
+      onCerrarSesion();
+    }
   };
 
   return (
@@ -95,14 +146,49 @@ export function Perfil({ usuario, setUsuario, ordenes = [] }) {
               </p>
 
               <p>
-                <strong>Total:</strong> ${Number(orden.total).toFixed(2)}
+                <strong>Total:</strong> $
+                {Number(orden.total).toFixed(2)}
               </p>
 
               <ul>
                 {orden.boletos.map((boleto, index) => (
                   <li key={boleto.id || index}>
-                    {boleto.evento || boleto.nombre || "Boleto"} — Zona:{" "}
-                    {boleto.zona || "General"} x{boleto.cantidad}
+                    <p>
+                      {boleto.evento || boleto.nombre || "Boleto"}
+                      {" — Zona: "}
+                      {boleto.zona || "General"}
+                      {" x"}
+                      {boleto.cantidad}
+                    </p>
+
+                    {boleto.entradas?.length > 0 ? (
+                      <div className="boletos-qr">
+                        {boleto.entradas.map((entrada) => (
+                          <div
+                            className="boleto-qr"
+                            key={entrada.codigo}
+                          >
+                            <h4>Boleto electrónico</h4>
+
+                            <QRCodeCanvas
+                              value={entrada.valorQR}
+                              size={180}
+                              level="H"
+                            />
+
+                            <p>
+                              <strong>Código:</strong>{" "}
+                              {entrada.codigo}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p>
+                        Este boleto pertenece a una compra
+                        anterior y no tiene QR generado.
+                      </p>
+                    )}
                   </li>
                 ))}
               </ul>
