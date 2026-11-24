@@ -32,6 +32,7 @@ export function Pagos({ items, setItems, onCompraExitosa }) {
 
         setTimeout(() => {
             const ultimos4 = tarjeta.trim().slice(-4);
+
             const orden = {
                 id: `ORD-${Date.now().toString().slice(-6)}`,
                 fechaCompra: new Date().toLocaleDateString(),
@@ -43,7 +44,6 @@ export function Pagos({ items, setItems, onCompraExitosa }) {
             };
 
             setItems([]);
-            localStorage.removeItem('carrito_tiket');
             setProcesando(false);
             setConfirmacion(orden);
 

@@ -1,7 +1,7 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import './App.css';
 
-                                                                                                          
 import Login from './assets/Components/Login.jsx';
 import BusquedaEventos from './assets/Components/BusquedaEventos.jsx';
 import AdministracionEventos from './assets/Components/AdministracionEventos.jsx';
@@ -22,10 +22,28 @@ function App() {
   });
 
   const [vista, setVista] = useState('inicio');
+
   const [items, setItems] = useState(() => {
-    const guardado = localStorage.getItem('carrito_tiket');
-    return guardado ? JSON.parse(guardado) : [];
+    const guardada = localStorage.getItem('sesion');
+
+    if (!guardada) return [];
+
+    const usuarioActual = JSON.parse(guardada);
+    const carritoGuardado = localStorage.getItem(
+      `carrito_tiket_${usuarioActual.id}`
+    );
+
+    return carritoGuardado ? JSON.parse(carritoGuardado) : [];
   });
+
+  const [cartOwnerId, setCartOwnerId] = useState(() => {
+    const guardada = localStorage.getItem('sesion');
+    if (!guardada) return null;
+
+    const usuarioActual = JSON.parse(guardada);
+    return usuarioActual.rol === 'admin' ? null : usuarioActual.id;
+  });
+
   const [ordenes, setOrdenes] = useState(() => {
     const guardado = localStorage.getItem('ordenes_tiket');
     return guardado ? JSON.parse(guardado) : [];
@@ -36,23 +54,66 @@ function App() {
     return guardado ? JSON.parse(guardado) : { nombre: '', correo: '' };
   });
 
+  // Guardar únicamente el carrito del usuario dueño del estado actual.
+  useEffect(() => {
+    if (cartOwnerId !== null) {
+      localStorage.setItem(
+        `carrito_tiket_${cartOwnerId}`,
+        JSON.stringify(items)
+      );
+    }
+  }, [items, cartOwnerId]);
+
   const agregarOrden = (nuevaOrden) => {
     setOrdenes((prev) => {
       const actualizadas = [nuevaOrden, ...prev];
       localStorage.setItem('ordenes_tiket', JSON.stringify(actualizadas));
       return actualizadas;
     });
-
   };
+
+  const iniciarSesion = (nuevaSesion) => {
+    const carritoGuardado =
+      nuevaSesion.rol === 'admin'
+        ? null
+        : localStorage.getItem(`carrito_tiket_${nuevaSesion.id}`);
+
+    const carritoUsuario = carritoGuardado
+      ? JSON.parse(carritoGuardado)
+      : [];
+
+    setItems(carritoUsuario);
+    setCartOwnerId(nuevaSesion.rol === 'admin' ? null : nuevaSesion.id);
+    setSesion(nuevaSesion);
+
+    const nuevoUsuario = {
+      nombre: nuevaSesion.nombre,
+      correo: nuevaSesion.correo
+    };
+
+    setUsuario(nuevoUsuario);
+
+    localStorage.setItem('sesion', JSON.stringify(nuevaSesion));
+    localStorage.setItem('usuario_tiket', JSON.stringify(nuevoUsuario));
+
+    setVista('inicio');
+  };
+
   const cerrarSesion = () => {
     localStorage.removeItem('sesion');
+    localStorage.removeItem('usuario_tiket');
+
     setSesion(null);
+    setUsuario({ nombre: '', correo: '' });
+    setItems([]);
+    setCartOwnerId(null);
+    setVista('inicio');
   };
 
   return (
     <EventosProvider>
       {!sesion ? (
-        <Login onLogin={setSesion} />
+        <Login onLogin={iniciarSesion} />
       ) : (
         <div className="app">
           <header className="encabezado">
@@ -68,15 +129,19 @@ function App() {
                 <button type="button" onClick={() => setVista('inicio')}>
                   Eventos
                 </button>
+
                 <button type="button" onClick={() => setVista('fechas')}>
                   Fechas y boletos
                 </button>
+
                 <button type="button" onClick={() => setVista('carrito')}>
                   Mi carrito ({items.length})
                 </button>
+
                 <button type="button" onClick={() => setVista('pagos')}>
                   Pagos
                 </button>
+
                 <button type="button" onClick={() => setVista('perfil')}>
                   Mi perfil
                 </button>
@@ -90,7 +155,7 @@ function App() {
               <p>Rol: {sesion.rol}</p>
             </div>
 
-            <button onClick={cerrarSesion}>
+            <button type="button" onClick={cerrarSesion}>
               Cerrar sesión
             </button>
           </div>
@@ -125,6 +190,7 @@ function App() {
                   usuario={usuario}
                   setUsuario={setUsuario}
                   ordenes={ordenes}
+                  onCerrarSesion={cerrarSesion}
                 />
               )}
 

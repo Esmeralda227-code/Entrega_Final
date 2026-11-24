@@ -83,21 +83,32 @@ export function FechasBoletos({ items = [], setItems, onIrACarrito }) {
 
     const agregarAlCarrito = (evt) => {
         const { zona, cantidad } = obtenerConfig(evt);
-        const zonaActual = evt.zonas.find((z) => z.nombre === zona) || evt.zonas[0];
+        const zonaActual =
+            evt.zonas.find((z) => z.nombre === zona) || evt.zonas[0];
 
         const eventoRelacionado = eventos.find(
-            (ev) => ev.nombre.toLowerCase() === evt.evento.toLowerCase()
+            (ev) =>
+                ev.nombre?.trim().toLowerCase() ===
+                evt.evento.trim().toLowerCase()
         );
 
+        const imagen = eventoRelacionado?.imagen || "";
+
         const indiceExistente = items.findIndex(
-            (item) => item.evento === evt.evento && item.zona === zonaActual.nombre
+            (item) =>
+                item.evento?.toLowerCase() === evt.evento.toLowerCase() &&
+                item.zona === zonaActual.nombre
         );
 
         const actualizados =
             indiceExistente >= 0
                 ? items.map((item, idx) =>
                     idx === indiceExistente
-                        ? { ...item, cantidad: item.cantidad + cantidad }
+                        ? {
+                            ...item,
+                            cantidad: item.cantidad + cantidad,
+                            imagen: imagen || item.imagen || ""
+                        }
                         : item
                 )
                 : [
@@ -106,7 +117,7 @@ export function FechasBoletos({ items = [], setItems, onIrACarrito }) {
                         id: `${evt.id}-${zonaActual.nombre}-${Date.now()}`,
                         evento: evt.evento,
                         fecha: evt.fecha,
-                        imagen: eventoRelacionado?.imagen || "",
+                        imagen,
                         zona: zonaActual.nombre,
                         precio: zonaActual.precio,
                         cantidad,
@@ -114,7 +125,6 @@ export function FechasBoletos({ items = [], setItems, onIrACarrito }) {
                 ];
 
         setItems(actualizados);
-        localStorage.setItem("carrito_tiket", JSON.stringify(actualizados));
 
         setAviso(
             `Se agregaron ${cantidad} boleto(s) de ${evt.evento} (${zonaActual.nombre}).`
@@ -130,7 +140,8 @@ export function FechasBoletos({ items = [], setItems, onIrACarrito }) {
             {EVENTOS.map((evt) => {
                 const config = obtenerConfig(evt);
                 const zonaObj =
-                    evt.zonas.find((z) => z.nombre === config.zona) || evt.zonas[0];
+                    evt.zonas.find((z) => z.nombre === config.zona) ||
+                    evt.zonas[0];
 
                 return (
                     <article key={evt.id}>
@@ -144,7 +155,9 @@ export function FechasBoletos({ items = [], setItems, onIrACarrito }) {
                             Zona:
                             <select
                                 value={zonaObj.nombre}
-                                onChange={(e) => cambiarZona(evt.id, e.target.value)}
+                                onChange={(e) =>
+                                    cambiarZona(evt.id, e.target.value)
+                                }
                             >
                                 {evt.zonas.map((z) => (
                                     <option key={z.nombre} value={z.nombre}>
@@ -160,11 +173,16 @@ export function FechasBoletos({ items = [], setItems, onIrACarrito }) {
                                 type="number"
                                 min="1"
                                 value={config.cantidad}
-                                onChange={(e) => cambiarCantidad(evt.id, e.target.value)}
+                                onChange={(e) =>
+                                    cambiarCantidad(evt.id, e.target.value)
+                                }
                             />
                         </label>
 
-                        <button type="button" onClick={() => agregarAlCarrito(evt)}>
+                        <button
+                            type="button"
+                            onClick={() => agregarAlCarrito(evt)}
+                        >
                             Agregar al carrito
                         </button>
                     </article>
