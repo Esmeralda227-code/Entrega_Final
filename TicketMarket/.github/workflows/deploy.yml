@@ -28,17 +28,20 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: TicketMarket/package-lock.json
 
       - name: Install dependencies
         run: npm ci
+        working-directory: ./TicketMarket
 
       - name: Build
         run: npm run build
+        working-directory: ./TicketMarket
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: TicketMarket/dist
 
   deploy:
     environment:
