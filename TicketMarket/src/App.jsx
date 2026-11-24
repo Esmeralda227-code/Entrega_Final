@@ -45,7 +45,7 @@ function App() {
 
   };
   const cerrarSesion = () => {
-    localStorage.removeItem('sesion');s
+    localStorage.removeItem('sesion');
     setSesion(null);
   };
 

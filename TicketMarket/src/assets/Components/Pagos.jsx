@@ -1,4 +1,6 @@
+
 import { useState } from "react";
+
 export function Pagos({ items, setItems, onCompraExitosa }) {
     const [nombre, setNombre] = useState('');
     const [correo, setCorreo] = useState('');
@@ -11,9 +13,10 @@ export function Pagos({ items, setItems, onCompraExitosa }) {
         (acc, item) => acc + item.precio * item.cantidad,
         0
     );
+
     const manejarPago = (e) => {
         e.preventDefault();
-        setError('')
+        setError('');
 
         if (items.length === 0) {
             setError('No hay boletos en el carrito para procesar el pago');
@@ -51,9 +54,10 @@ export function Pagos({ items, setItems, onCompraExitosa }) {
     };
 
     return (
-        <section>
+        <section className="pagos-wrapper">
             <h2>pago</h2>
             <p>Total: ${subtotal.toFixed(2)}</p>
+
             <form onSubmit={manejarPago}>
                 <div>
                     <label htmlFor="nombre">Nombre</label>
@@ -90,20 +94,20 @@ export function Pagos({ items, setItems, onCompraExitosa }) {
 
                 {error && <p>{error}</p>}
 
-                    <button type="submit" disabled={procesando || Boolean(confirmacion)}>
-                        {procesando ? "procesando..." : "pagar"}
-                    </button>
-                </form>
-                
-                {confirmacion && (
-                    <div>
-                        <h3>Compra confirmada</h3>
-                        <p>Orden: {confirmacion.id}</p>
-                        <p>Titular: {confirmacion.titular}</p>
-                        <p>Tarjeta: ** {confirmacion.terminacion}</p>
-                        <p>Total pagado: ${confirmacion.total.toFixed(2)}</p>
-                    </div>
-                )}
+                <button type="submit" disabled={procesando || Boolean(confirmacion)}>
+                    {procesando ? "procesando..." : "pagar"}
+                </button>
+            </form>
+
+            {confirmacion && (
+                <div>
+                    <h3>Compra confirmada</h3>
+                    <p>Orden: {confirmacion.id}</p>
+                    <p>Titular: {confirmacion.titular}</p>
+                    <p>Tarjeta: ** {confirmacion.terminacion}</p>
+                    <p>Total pagado: ${confirmacion.total.toFixed(2)}</p>
+                </div>
+            )}
         </section>
-    )
+    );
 }
