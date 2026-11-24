@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { usuarios } from '../Data/usuarios.js';
-import logo from '../Imagenes/logo.png';
+import logo from '../Imagenes/Logo.png';
 
 function Login({ onLogin }) {
   const [vista, setVista] = useState('login');
