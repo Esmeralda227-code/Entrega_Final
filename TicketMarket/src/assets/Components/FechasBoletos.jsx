@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { eventos } from "../Data/eventos2";
 
 const EVENTOS = [
     {
@@ -74,7 +75,7 @@ export function FechasBoletos({ items = [], setItems, onIrACarrito }) {
         setSeleccion((prev) => ({
             ...prev,
             [evtId]: {
-                ...(prev[evtId] || { zona: EVENTOS.find(e => e.id === evtId).zonas[0].nombre }),
+                ...(prev[evtId] || {}),
                 cantidad: val,
             },
         }));
@@ -83,6 +84,10 @@ export function FechasBoletos({ items = [], setItems, onIrACarrito }) {
     const agregarAlCarrito = (evt) => {
         const { zona, cantidad } = obtenerConfig(evt);
         const zonaActual = evt.zonas.find((z) => z.nombre === zona) || evt.zonas[0];
+
+        const eventoRelacionado = eventos.find(
+            (ev) => ev.nombre.toLowerCase() === evt.evento.toLowerCase()
+        );
 
         const indiceExistente = items.findIndex(
             (item) => item.evento === evt.evento && item.zona === zonaActual.nombre
@@ -101,6 +106,7 @@ export function FechasBoletos({ items = [], setItems, onIrACarrito }) {
                         id: `${evt.id}-${zonaActual.nombre}-${Date.now()}`,
                         evento: evt.evento,
                         fecha: evt.fecha,
+                        imagen: eventoRelacionado?.imagen || "",
                         zona: zonaActual.nombre,
                         precio: zonaActual.precio,
                         cantidad,
@@ -109,6 +115,7 @@ export function FechasBoletos({ items = [], setItems, onIrACarrito }) {
 
         setItems(actualizados);
         localStorage.setItem("carrito_tiket", JSON.stringify(actualizados));
+
         setAviso(
             `Se agregaron ${cantidad} boleto(s) de ${evt.evento} (${zonaActual.nombre}).`
         );
