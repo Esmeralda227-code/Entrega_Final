@@ -1,6 +1,4 @@
-/* ========================================
-   CONFIGURACIÓN GENERAL
-======================================== */
+/*  CONFIGURACIÓN GENERAL */
 
 :root {
   --celeste: #C9E4F6;
@@ -58,9 +56,7 @@ button {
   padding-bottom: 40px;
 }
 
-/* ========================================
-   BOTONES GENERALES
-======================================== */
+/* BOTONES GENERALES */
 
 button,
 .btn-principal {
@@ -84,9 +80,7 @@ button,
   background: var(--azul-hover);
 }
 
-/* ========================================
-   INICIO DE SESIÓN
-======================================== */
+/* INICIO DE SESION */
 
 .contenedor-sesion {
   min-height: 100vh;
@@ -200,9 +194,7 @@ button,
   line-height: 1.7;
 }
 
-/* ========================================
-   ENCABEZADO
-======================================== */
+/* ENCABEZADO */
 
 .encabezado {
   position: relative;
@@ -266,9 +258,7 @@ button,
   box-shadow: none;
 }
 
-/* ========================================
-   SESIÓN DEL USUARIO
-======================================== */
+/* SESIÓN DEL USUARIO */
 
 .sesion-usuario {
   display: flex;
@@ -290,9 +280,7 @@ button,
   font-size: 14px;
 }
 
-/* ========================================
-   CATÁLOGO DE EVENTOS
-======================================== */
+/* CATÁLOGO DE EVENTOS */
 
 .busqueda-eventos {
   min-height: 500px;
@@ -367,9 +355,7 @@ button,
   font-size: 14px;
 }
 
-/* ========================================
-   TARJETAS DE EVENTOS
-======================================== */
+/*  TARJETAS DE EVENTOS */
 
 .eventos-grid {
   display: grid;
@@ -467,9 +453,7 @@ button,
   text-align: center;
 }
 
-/* ========================================
-   DETALLE DEL EVENTO
-======================================== */
+/*DETALLE DEL EVENTO */
 
 .evento-detalle {
   max-width: var(--ancho-seccion);
@@ -512,9 +496,7 @@ button,
   margin-top: 20px;
 }
 
-/* ========================================
-   ADMINISTRACIÓN DE EVENTOS
-======================================== */
+/* ADMINISTRACIÓN DE EVENTOS */
 
 .administracion-eventos {
   max-width: var(--ancho-seccion);
@@ -712,9 +694,7 @@ button,
   margin-top: 5px;
 }
 
-/* ========================================
-   REPORTES
-======================================== */
+/* REPORTES */
 
 .reportes {
   max-width: var(--ancho-seccion);
@@ -733,9 +713,7 @@ button,
   font-weight: 900;
 }
 
-/* ========================================
-   RESPONSIVE
-======================================== */
+/* RESPONSIVE */
 
 @media (max-width: 1000px) {
   .eventos-grid {
