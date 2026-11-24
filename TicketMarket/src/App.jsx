@@ -13,7 +13,7 @@ import { Carrito } from './assets/Components/Carrito.jsx';
 
 import { EventosProvider } from './assets/Context/EventosContext.jsx';
 
-import logo from './assets/Imagenes/logo.png';
+import logo from './assets/Imagenes/Logo.png';
 
 function App() {
   const [sesion, setSesion] = useState(() => {
