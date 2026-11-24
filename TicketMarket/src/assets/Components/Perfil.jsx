@@ -1,9 +1,9 @@
+
 import { useState } from "react";
 
 export function Perfil({ usuario, setUsuario, ordenes = [] }) {
   const [nombre, setNombre] = useState(usuario?.nombre || "");
   const [correo, setCorreo] = useState(usuario?.correo || "");
-  const [rol, setRol] = useState(usuario?.rol || "Cliente");
   const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
 
@@ -18,9 +18,9 @@ export function Perfil({ usuario, setUsuario, ordenes = [] }) {
     }
 
     const nuevoUsuario = {
+      ...usuario,
       nombre: nombre.trim(),
       correo: correo.trim(),
-      rol,
     };
 
     setUsuario(nuevoUsuario);
@@ -32,7 +32,6 @@ export function Perfil({ usuario, setUsuario, ordenes = [] }) {
     setUsuario(null);
     setNombre("");
     setCorreo("");
-    setRol("Cliente");
     setMensaje("");
     setError("");
     localStorage.removeItem("usuario_tiket");
@@ -63,23 +62,11 @@ export function Perfil({ usuario, setUsuario, ordenes = [] }) {
           />
         </div>
 
-        <div>
-          <label htmlFor="perfil-rol">Rol</label>
-          <select
-            id="perfil-rol"
-            value={rol}
-            onChange={(e) => setRol(e.target.value)}
-          >
-            <option value="Cliente">Cliente</option>
-            <option value="Organizador">Organizador</option>
-            <option value="Administrador">Administrador</option>
-          </select>
-        </div>
-
         {error && <p>{error}</p>}
         {mensaje && <p>{mensaje}</p>}
 
         <button type="submit">Guardar perfil</button>
+
         {usuario && (
           <button type="button" onClick={cerrarSesion}>
             Cerrar sesión
@@ -98,13 +85,15 @@ export function Perfil({ usuario, setUsuario, ordenes = [] }) {
           {ordenes.map((orden) => (
             <li key={orden.id}>
               <p>
-                <strong>Orden:</strong> {orden.id} | <strong>Fecha:</strong>{" "}
-                {orden.fechaCompra}
+                <strong>Orden:</strong> {orden.id} |{" "}
+                <strong>Fecha:</strong> {orden.fechaCompra}
               </p>
+
               <p>
                 <strong>Titular:</strong> {orden.titular} |{" "}
                 <strong>Tarjeta:</strong> ** {orden.terminacion}
               </p>
+
               <p>
                 <strong>Total:</strong> ${Number(orden.total).toFixed(2)}
               </p>
