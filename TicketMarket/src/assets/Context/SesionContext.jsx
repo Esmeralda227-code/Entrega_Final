@@ -1,14 +1,19 @@
 
-import { createContext, useContext, useEffect, useReducer } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useReducer
+} from "react";
 
-const SesionContext = createContext();
+const SesionContext = createContext(null);
 
 function sesionReducer(state, action) {
   switch (action.type) {
-    case 'INICIAR_SESION':
+    case "INICIAR_SESION":
       return action.payload;
 
-    case 'CERRAR_SESION':
+    case "CERRAR_SESION":
       return null;
 
     default:
@@ -16,30 +21,41 @@ function sesionReducer(state, action) {
   }
 }
 
+function obtenerSesionInicial() {
+  try {
+    const guardada = localStorage.getItem("sesion");
+    return guardada ? JSON.parse(guardada) : null;
+  } catch (error) {
+    console.error("Error al recuperar la sesión:", error);
+    localStorage.removeItem("sesion");
+    return null;
+  }
+}
+
 export function SesionProvider({ children }) {
   const [sesion, dispatch] = useReducer(
     sesionReducer,
     null,
-    () => {
-      const guardada = localStorage.getItem('sesion');
-      return guardada ? JSON.parse(guardada) : null;
-    }
+    obtenerSesionInicial
   );
 
   useEffect(() => {
     if (sesion) {
-      localStorage.setItem('sesion', JSON.stringify(sesion));
+      localStorage.setItem("sesion", JSON.stringify(sesion));
     } else {
-      localStorage.removeItem('sesion');
+      localStorage.removeItem("sesion");
     }
   }, [sesion]);
 
   const iniciarSesion = (usuario) => {
-    dispatch({ type: 'INICIAR_SESION', payload: usuario });
+    dispatch({
+      type: "INICIAR_SESION",
+      payload: usuario
+    });
   };
 
   const cerrarSesion = () => {
-    dispatch({ type: 'CERRAR_SESION' });
+    dispatch({ type: "CERRAR_SESION" });
   };
 
   return (
@@ -52,5 +68,13 @@ export function SesionProvider({ children }) {
 }
 
 export function useSesion() {
-  return useContext(SesionContext);
+  const contexto = useContext(SesionContext);
+
+  if (!contexto) {
+    throw new Error(
+      "useSesion debe utilizarse dentro de SesionProvider."
+    );
+  }
+
+  return contexto;
 }

@@ -1,50 +1,130 @@
-import { useState } from "react";
 
-export function Perfil({ usuario, setUsuario, ordenes = [] }) {
+import { useEffect, useState } from "react";
+import { QRCodeCanvas } from "qrcode.react";
+
+export function Perfil({
+  usuario,
+  setUsuario,
+  setSesion,
+  ordenes = [],
+  onCerrarSesion
+}) {
   const [nombre, setNombre] = useState(usuario?.nombre || "");
   const [correo, setCorreo] = useState(usuario?.correo || "");
-  const [rol, setRol] = useState(usuario?.rol || "Cliente");
   const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    setNombre(usuario?.nombre || "");
+    setCorreo(usuario?.correo || "");
+    setMensaje("");
+    setError("");
+  }, [usuario]);
+
   const guardarPerfil = (e) => {
     e.preventDefault();
+
     setError("");
     setMensaje("");
 
-    if (!nombre.trim() || !correo.includes("@")) {
-      setError("Ingresa un nombre y un correo activo.");
+    const nombreLimpio = nombre.trim();
+    const correoLimpio = correo.trim().toLowerCase();
+
+    if (
+      !nombreLimpio ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoLimpio)
+    ) {
+      setError("Ingresa un nombre y un correo válido.");
       return;
     }
 
     const nuevoUsuario = {
-      nombre: nombre.trim(),
-      correo: correo.trim(),
-      rol,
+      ...usuario,
+      nombre: nombreLimpio,
+      correo: correoLimpio
     };
 
-    setUsuario(nuevoUsuario);
-    localStorage.setItem("usuario_tiket", JSON.stringify(nuevoUsuario));
-    setMensaje("Perfil guardado.");
+    try {
+      const sesionActual = JSON.parse(
+        localStorage.getItem("sesion") || "null"
+      );
+
+      const nuevaSesion = sesionActual
+        ? {
+            ...sesionActual,
+            nombre: nombreLimpio,
+            correo: correoLimpio
+          }
+        : null;
+
+      const registrados = JSON.parse(
+        localStorage.getItem("usuariosRegistrados") || "[]"
+      );
+
+      const usuariosActualizados = Array.isArray(registrados)
+        ? registrados.map((u) =>
+            String(u.id) === String(nuevoUsuario.id)
+              ? {
+                  ...u,
+                  nombre: nombreLimpio,
+                  correo: correoLimpio
+                }
+              : u
+          )
+        : [];
+
+      localStorage.setItem(
+        "usuario_tiket",
+        JSON.stringify(nuevoUsuario)
+      );
+
+      if (nuevaSesion) {
+        localStorage.setItem(
+          "sesion",
+          JSON.stringify(nuevaSesion)
+        );
+
+        setSesion?.(nuevaSesion);
+      }
+
+      localStorage.setItem(
+        "usuariosRegistrados",
+        JSON.stringify(usuariosActualizados)
+      );
+
+      setUsuario(nuevoUsuario);
+      setMensaje("Perfil guardado correctamente.");
+
+    } catch (error) {
+      console.error("Error al guardar el perfil:", error);
+      setError("No se pudieron guardar los cambios.");
+    }
   };
 
-  const cerrarSesion = () => {
-    setUsuario(null);
-    setNombre("");
-    setCorreo("");
-    setRol("Cliente");
-    setMensaje("");
-    setError("");
-    localStorage.removeItem("usuario_tiket");
-  };
+  const ordenesUsuario = ordenes.filter((orden) => {
+    if (
+      orden.usuarioId !== undefined &&
+      orden.usuarioId !== null
+    ) {
+      return String(orden.usuarioId) === String(usuario?.id);
+    }
+
+    // Compatibilidad con compras anteriores
+    // que todavía no tienen usuarioId.
+    return (
+      orden.correo?.toLowerCase() ===
+      usuario?.correo?.toLowerCase()
+    );
+  });
 
   return (
-    <section>
+    <section className="perfil-wrapper">
       <h2>Mi Perfil</h2>
 
       <form onSubmit={guardarPerfil}>
         <div>
           <label htmlFor="perfil-nombre">Nombre</label>
+
           <input
             id="perfil-nombre"
             type="text"
@@ -55,6 +135,7 @@ export function Perfil({ usuario, setUsuario, ordenes = [] }) {
 
         <div>
           <label htmlFor="perfil-correo">Correo</label>
+
           <input
             id="perfil-correo"
             type="email"
@@ -63,25 +144,23 @@ export function Perfil({ usuario, setUsuario, ordenes = [] }) {
           />
         </div>
 
-        <div>
-          <label htmlFor="perfil-rol">Rol</label>
-          <select
-            id="perfil-rol"
-            value={rol}
-            onChange={(e) => setRol(e.target.value)}
-          >
-            <option value="Cliente">Cliente</option>
-            <option value="Organizador">Organizador</option>
-            <option value="Administrador">Administrador</option>
-          </select>
-        </div>
+        {error && (
+          <p role="alert">{error}</p>
+        )}
 
-        {error && <p>{error}</p>}
-        {mensaje && <p>{mensaje}</p>}
+        {mensaje && (
+          <p role="status">{mensaje}</p>
+        )}
 
-        <button type="submit">Guardar perfil</button>
+        <button type="submit">
+          Guardar perfil
+        </button>
+
         {usuario && (
-          <button type="button" onClick={cerrarSesion}>
+          <button
+            type="button"
+            onClick={onCerrarSesion}
+          >
             Cerrar sesión
           </button>
         )}
@@ -91,29 +170,68 @@ export function Perfil({ usuario, setUsuario, ordenes = [] }) {
 
       <h3>Historial de compras</h3>
 
-      {ordenes.length === 0 ? (
+      {ordenesUsuario.length === 0 ? (
         <p>No tienes compras registradas todavía.</p>
       ) : (
         <ul>
-          {ordenes.map((orden) => (
+          {ordenesUsuario.map((orden) => (
             <li key={orden.id}>
               <p>
-                <strong>Orden:</strong> {orden.id} | <strong>Fecha:</strong>{" "}
-                {orden.fechaCompra}
+                <strong>Orden:</strong> {orden.id}
+                {" | "}
+                <strong>Fecha:</strong> {orden.fechaCompra}
               </p>
+
               <p>
-                <strong>Titular:</strong> {orden.titular} |{" "}
+                <strong>Titular:</strong> {orden.titular}
+                {" | "}
                 <strong>Tarjeta:</strong> ** {orden.terminacion}
               </p>
+
               <p>
-                <strong>Total:</strong> ${Number(orden.total).toFixed(2)}
+                <strong>Total:</strong> $
+                {Number(orden.total || 0).toFixed(2)}
               </p>
 
               <ul>
-                {orden.boletos.map((boleto, index) => (
+                {(orden.boletos || []).map((boleto, index) => (
                   <li key={boleto.id || index}>
-                    {boleto.evento || boleto.nombre || "Boleto"} — Zona:{" "}
-                    {boleto.zona || "General"} x{boleto.cantidad}
+                    <p>
+                      {boleto.evento || boleto.nombre || "Boleto"}
+                      {" — Zona: "}
+                      {boleto.zona || "General"}
+                      {" x"}
+                      {boleto.cantidad}
+                    </p>
+
+                    {boleto.entradas?.length > 0 ? (
+                      <div className="boletos-qr">
+                        {boleto.entradas.map((entrada) => (
+                          <div
+                            className="boleto-qr"
+                            key={entrada.codigo}
+                          >
+                            <h4>Boleto electrónico</h4>
+
+                            <QRCodeCanvas
+                              value={entrada.valorQR || entrada.codigo}
+                              size={180}
+                              level="H"
+                            />
+
+                            <p>
+                              <strong>Código:</strong>{" "}
+                              {entrada.codigo}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p>
+                        Este boleto pertenece a una compra anterior
+                        y no tiene QR generado.
+                      </p>
+                    )}
                   </li>
                 ))}
               </ul>
