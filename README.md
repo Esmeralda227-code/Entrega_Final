@@ -122,3 +122,49 @@ Durante el desarrollo de TicketMarket se tomaron decisiones para mantener una es
 - **Operaciones simuladas:** se implementaron procesos de prueba para representar las compras y los pagos sin realizar transacciones reales.
 - **React y Vite:** se utilizaron para desarrollar la interfaz y facilitar el entorno de desarrollo y compilación.
 
+
+
+## Evidencias de funcionalidad
+Se adjuntan pruebas del funcionamiento correcto del proyecto
+
+![captura0](TicketMarket/docs/screenshots/captura0.png)
+
+![captura1](TicketMarket/docs/screenshots/captura1.png)
+
+![captura2](TicketMarket/docs/screenshots/captura2.png)
+
+![captura3](TicketMarket/docs/screenshots/captura3.png)
+
+![captura4](TicketMarket/docs/screenshots/captura4.png)
+
+![captura5](TicketMarket/docs/screenshots/captura5.png)
+
+![captura6](TicketMarket/docs/screenshots/captura6.png)
+
+![captura7](TicketMarket/docs/screenshots/captura7.png)
+
+![captura8](TicketMarket/docs/screenshots/captura8.png)
+
+![captura9](TicketMarket/docs/screenshots/captura9.png)
+
+![capturacel0](TicketMarket/docs/screenshots/capturacel0.png)
+
+![capturacel1](TicketMarket/docs/screenshots/capturacel1.png)
+
+![capturacel2](TicketMarket/docs/screenshots/capturacel2.png)
+
+![capturacel3](TicketMarket/docs/screenshots/capturacel3.png)
+
+![capturacel4](TicketMarket/docs/screenshots/capturacel4.png)
+
+![capturacel5](TicketMarket/docs/screenshots/capturacel5.png)
+
+![capturacel6](TicketMarket/docs/screenshots/capturacel6.png)
+
+![capturacel7](TicketMarket/docs/screenshots/capturacel7.png)
+
+![capturacel8](TicketMarket/docs/screenshots/capturacel8.png)
+
+![capturacel9](TicketMarket/docs/screenshots/capturacel9.png)
+
+![capturacel10](TicketMarket/docs/screenshots/capturacel10.png)
